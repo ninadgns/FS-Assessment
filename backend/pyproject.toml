@@ -1,0 +1,38 @@
+[project]
+name = "truck-weather-routing"
+version = "1.0.0"
+description = "Weather-aware truck route planner API"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.1,<6.2",
+    "djangorestframework>=3.18,<3.19",
+    "httpx>=0.28,<0.29",
+    "shapely>=2.1,<2.3",
+    "numpy>=2.1",
+    "gunicorn>=23.0",
+    "whitenoise>=6.9",
+    "brotli>=1.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.10",
+    "respx>=0.22",
+    "ruff>=0.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "DJ"]

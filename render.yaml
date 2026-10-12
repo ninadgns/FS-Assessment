@@ -1,0 +1,18 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: clearway
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "false"
+      # Optional: TomTom truck routing + search (falls back to OSRM/Photon without it).
+      - key: TOMTOM_API_KEY
+        sync: false
+      # Optional: paid Open-Meteo key, lifts the free tier's per-minute limit.
+      - key: OPEN_METEO_API_KEY
+        sync: false
