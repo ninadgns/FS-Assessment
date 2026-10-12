@@ -21,9 +21,31 @@ if not DEBUG and SECRET_KEY == "dev-only-insecure-key":
     raise RuntimeError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is off")
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-if render_host := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+
+# Railway injects RAILWAY_PUBLIC_DOMAIN; Render injects RENDER_EXTERNAL_HOSTNAME.
+# Vercel injects VERCEL_URL (preview) and VERCEL_PROJECT_PRODUCTION_URL (production).
+# Auto-add whichever is present so ALLOWED_HOSTS never needs manual config.
+if railway_host := os.environ.get("RAILWAY_PUBLIC_DOMAIN"):
+    ALLOWED_HOSTS.append(railway_host)
+    CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS") + [f"https://{railway_host}"]
+elif render_host := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
     ALLOWED_HOSTS.append(render_host)
-CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+    CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+else:
+    CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+# Vercel: add deployment URLs to ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS.
+# VERCEL_URL covers per-deployment preview URLs; VERCEL_PROJECT_PRODUCTION_URL
+# covers the stable production URL (both are injected automatically by Vercel).
+_vercel_origins: list[str] = []
+if vercel_url := os.environ.get("VERCEL_URL"):
+    ALLOWED_HOSTS.append(vercel_url)
+    _vercel_origins.append(f"https://{vercel_url}")
+if vercel_prod_url := os.environ.get("VERCEL_PROJECT_PRODUCTION_URL"):
+    ALLOWED_HOSTS.append(vercel_prod_url)
+    _vercel_origins.append(f"https://{vercel_prod_url}")
+if _vercel_origins:
+    CSRF_TRUSTED_ORIGINS = list(CSRF_TRUSTED_ORIGINS) + _vercel_origins
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
